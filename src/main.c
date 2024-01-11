@@ -1,3 +1,4 @@
+#include <getopt.h>
 #include <stdio.h>
 #include <stdlib.h>
 
@@ -7,8 +8,24 @@
 #include "langton_io.h"
 
 int main(int argc, char** argv) {
-    Config* config = malloc(sizeof(Config));
-    build_config(config, argc, argv);
+    int result = 0;
+
+    Config* config = calloc(1, sizeof(Config));
+    if (config == NULL) {
+        fprintf(stderr, "%s: błąd alokacji\n", argv[0]);
+        result = 1;
+        goto out_nofree;
+    }
+
+    if ((result = build_config(config, argc, argv)) != 0) {
+        print_config_error(argv[0], result);
+        result = 1;
+        goto out_free_config;
+    }
+
+    FILE* out;
+    if (config->output_prefix == NULL)
+        out = stdout;
 
     Ant a = {
         .x = config->row_cnt / 2,
@@ -26,7 +43,14 @@ int main(int argc, char** argv) {
     b.tile_colors = tc;
     for(int i = 0; i < config->iter_no; i++) {
         iterate(&a, &b);
+        if (out != stdout)
+            out = fopen;
+        write_state(a, b, stdout);
     }
-    write_state(a, b, stdout);
-    return 0;
+
+out_free_config:
+    free(config);
+
+out_nofree:
+    return result;
 }
