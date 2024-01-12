@@ -1,6 +1,7 @@
 #include <getopt.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 #include "config.h"
 #include "iteration.h"
@@ -31,7 +32,7 @@ int main(int argc, char** argv) {
         .x = config->row_cnt / 2,
         .y = config->col_cnt / 2,
         .direction = config->initial_dir,
-        .iter_cnt = 0
+        .iter_no = 0
     };
     Board b = {
         .width = config->row_cnt,
@@ -41,11 +42,26 @@ int main(int argc, char** argv) {
     for(int i = 0; i < b.height; i++)
         tc[i] = calloc(sizeof(TileColor), b.width);
     b.tile_colors = tc;
+
     for(int i = 0; i < config->iter_no; i++) {
         iterate(&a, &b);
+        if (out != stdout) {
+            result = open_outfile(out, config->output_prefix, a.iter_no);
+            if (result == 1) {
+                fprintf(stderr, "%s: błąd alokacji\n", argv[0]);
+                /* todo: goto out_free_FOO */
+                return 1;
+            } else if (result == 2) {
+                fprintf(stderr,
+                        "%s: nie można otworzyć pliku wyjściowego",
+                        argv[0]);
+                /* todo: goto out_free_FOO */
+                return 1;
+            }
+        }
+        write_state(a, b, out);
         if (out != stdout)
-            out = fopen;
-        write_state(a, b, stdout);
+            fclose(out);
     }
 
 out_free_config:

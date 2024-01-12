@@ -21,7 +21,11 @@
 #define ANT_WEST_WHITE "◁"
 #define ANT_WEST_BLACK "◀"
 
+#define OUT_DIR "out/"
+
 char* get_ant_ch(Ant a, TileColor clr);
+int open_outfile(FILE* out, char* outfile_prefix, int outfile_no);
 int write_state(Ant a, Board b, FILE* write_loc);
+int read_state(Ant* a, Board* b, FILE* read_loc);
 
 #endif

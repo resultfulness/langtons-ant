@@ -1,4 +1,7 @@
 #include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <wchar.h>
 
 #include "langton_io.h"
 
@@ -15,8 +18,44 @@ char* get_ant_ch(Ant a, TileColor clr) {
     }
 }
 
+char* strpush_i(char* s, int n) {
+    /* alokacja:
+     * - rozmiar napisu
+     * - bit na znak podkreślnika `_`
+     * - 21 znaków (pomieści liczby 64bit) LUB 12 znaków (pomieści liczby 32bit)
+     * - NULL terminujący napis
+     */
+    char* result = malloc(strlen(s) + 1 + 21 /*12*/ + 1);
+    if (result == NULL)
+        return NULL;
+    sprintf(result, "%s_%d", s, n);
+    return result;
+}
+
+int open_outfile(FILE* out, char* outfile_prefix, int outfile_no) {
+    char* filename = strpush_i(outfile_prefix, outfile_no);
+    if (filename == NULL)
+        return 1;
+    char* path = malloc(strlen(filename) + strlen(OUT_DIR));
+    if (path == NULL) {
+        free(filename);
+        return 1;
+    }
+    sprintf(path, "%s%s", OUT_DIR, filename);
+
+    out = fopen(path, "w");
+    if (out == NULL) {
+        free(filename);
+        free(path);
+        return 2;
+    }
+    free(filename);
+    free(path);
+    return 0;
+}
+
 int write_state(Ant a, Board b, FILE* write_loc) {
-    fprintf(write_loc, "%d:\n", a.iter_cnt);
+    fprintf(write_loc, "%d:\n", a.iter_no);
     fputs(WALL_NORTHWEST_CORNER, write_loc);
     for (int i = 0; i < b.width; i++) {
         fputs(WALL_HORIZONTAL, write_loc);
@@ -46,4 +85,8 @@ int write_state(Ant a, Board b, FILE* write_loc) {
     return 0;
 }
 
+int read_state(Ant* a, Board* b, FILE* read_loc) {
 
+
+    return 0;
+}

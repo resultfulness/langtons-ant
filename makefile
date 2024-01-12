@@ -5,6 +5,7 @@ CFLAGS = -std=c99 -pedantic -Wall
 LDLIBS =
 SRCDIR   = ./src
 BUILDDIR = ./build
+OUTDIR   = ./out
 
 OBJECTS = $(patsubst %.c,%.o,$(shell find $(SRCDIR) -type f -name '*.c'))
 
@@ -19,9 +20,10 @@ $(OBJECTS): dir
 
 dir:
 	@mkdir -p $(BUILDDIR)
+	@mkdir -p $(OUTDIR)
 
 clean:
-	@rm -rf $(BUILDDIR) $(PROJECT)
+	@rm -rf $(BUILDDIR) $(OUTDIR) $(PROJECT)
 
 .PHONY: all clean dir
 

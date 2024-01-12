@@ -23,5 +23,5 @@ void iterate(Ant* a, Board* b) {
             a->x--;
             break;
     }
-    a->iter_cnt++;
+    a->iter_no++;
 }
