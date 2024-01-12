@@ -46,15 +46,18 @@ int main(int argc, char** argv) {
     for(int i = 0; i < config->iter_no; i++) {
         iterate(&a, &b);
         if (out != stdout) {
-            result = open_outfile(out, config->output_prefix, a.iter_no);
-            if (result == 1) {
+            char* path = get_outfilepath(config->output_prefix, a.iter_no);
+            if (path == NULL) {
                 fprintf(stderr, "%s: błąd alokacji\n", argv[0]);
                 /* todo: goto out_free_FOO */
                 return 1;
-            } else if (result == 2) {
+            }
+            out = fopen(path, "w");
+            if (out == NULL) {
                 fprintf(stderr,
-                        "%s: nie można otworzyć pliku wyjściowego",
-                        argv[0]);
+                        "%s: nie można otworzyć pliku wyjściowego '%s'\n",
+                        argv[0],
+                        path);
                 /* todo: goto out_free_FOO */
                 return 1;
             }

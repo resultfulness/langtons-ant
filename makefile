@@ -1,7 +1,7 @@
 PROJECT = langtons-ant
 
 CC     = cc
-CFLAGS = -std=c99 -pedantic -Wall
+CFLAGS = -std=c99 -pedantic -Wall -ggdb
 LDLIBS =
 SRCDIR   = ./src
 BUILDDIR = ./build

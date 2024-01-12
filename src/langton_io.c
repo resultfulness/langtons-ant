@@ -32,26 +32,18 @@ char* strpush_i(char* s, int n) {
     return result;
 }
 
-int open_outfile(FILE* out, char* outfile_prefix, int outfile_no) {
+char* get_outfilepath(char* outfile_prefix, int outfile_no) {
     char* filename = strpush_i(outfile_prefix, outfile_no);
     if (filename == NULL)
-        return 1;
+        return NULL;
     char* path = malloc(strlen(filename) + strlen(OUT_DIR));
     if (path == NULL) {
         free(filename);
-        return 1;
+        return NULL;
     }
     sprintf(path, "%s%s", OUT_DIR, filename);
-
-    out = fopen(path, "w");
-    if (out == NULL) {
-        free(filename);
-        free(path);
-        return 2;
-    }
     free(filename);
-    free(path);
-    return 0;
+    return path;
 }
 
 int write_state(Ant a, Board b, FILE* write_loc) {
