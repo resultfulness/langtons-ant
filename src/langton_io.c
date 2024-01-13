@@ -2,10 +2,12 @@
 #include <stdlib.h>
 #include <string.h>
 #include <wchar.h>
+#include <locale.h>
 
 #include "langton_io.h"
+#include "langton.h"
 
-char* get_ant_ch(Ant a, TileColor clr) {
+wchar_t get_ant_ch(Ant a, TileColor clr) {
     switch (a.direction) {
         case NORTH:
             return clr == BLACK ? ANT_NORTH_BLACK : ANT_NORTH_WHITE;
@@ -47,38 +49,109 @@ char* get_outfilepath(char* outfile_prefix, int outfile_no) {
 }
 
 int write_state(Ant a, Board b, FILE* write_loc) {
-    fprintf(write_loc, "%d:\n", a.iter_no);
-    fputs(WALL_NORTHWEST_CORNER, write_loc);
+    // setlocale(LC_ALL, "C.UTF-8");
+    fprintf(write_loc, "%lc", WALL_NORTHWEST_CORNER);
     for (int i = 0; i < b.width; i++) {
-        fputs(WALL_HORIZONTAL, write_loc);
+        fprintf(write_loc, "%lc", WALL_HORIZONTAL);
     }
-    fputs(WALL_NORTHEAST_CORNER, write_loc);
-    fputc('\n', write_loc);
+    fprintf(write_loc, "%lc\n", WALL_NORTHEAST_CORNER);
     for (int i = 0; i < b.height; i++) {
-        fputs(WALL_VERTICAL, write_loc);
+        fprintf(write_loc, "%lc", WALL_VERTICAL);
         for (int j = 0; j < b.width; j++) {
             if (a.y == i && a.x == j) {
-                fputs(get_ant_ch(a, b.tile_colors[i][j]), write_loc);
+                fprintf(write_loc, "%lc", get_ant_ch(a, b.tile_colors[i][j]));
             } else if (b.tile_colors[i][j] == BLACK) {
-                fputs(TILE_BLACK, write_loc);
+                fprintf(write_loc, "%lc", TILE_BLACK);
             } else {
-                fputs(TILE_WHITE, write_loc);
+                fprintf(write_loc, "%lc", TILE_WHITE);
             }
         }
-        fputs(WALL_VERTICAL, write_loc);
-        fputc('\n', write_loc);
+        fprintf(write_loc, "%lc\n", WALL_VERTICAL);
     }
-    fputs(WALL_SOUTHWEST_CORNER, write_loc);
+    fprintf(write_loc, "%lc", WALL_SOUTHWEST_CORNER);
     for (int i = 0; i < b.width; i++) {
-        fputs(WALL_HORIZONTAL, write_loc);
+        fprintf(write_loc, "%lc", WALL_HORIZONTAL);
     }
-    fputs(WALL_SOUTHEAST_CORNER, write_loc);
-    fputc('\n', write_loc);
+    fprintf(write_loc, "%lc\n", WALL_SOUTHEAST_CORNER);
     return 0;
 }
 
 int read_state(Ant* a, Board* b, FILE* read_loc) {
-
-
+    setlocale(LC_ALL, "C.UTF-8");
+    for(int j = 0; j < b->height + 2; j++) {
+        for(int i = 0; i < b->width + 3; i++) {
+            wchar_t wc = getwc(read_loc);
+            if(wc == EOF) return 1;
+            if(j == 0 || i == 0 || j > b->height || i > b->width) {
+                if (i == 0 && j == 0 && wc == WALL_NORTHWEST_CORNER) continue;
+                else if (i == 0 && j == b->height + 1 && wc == WALL_SOUTHWEST_CORNER) continue;
+                else if (i == b->width + 1 && j == b->height + 1 && wc == WALL_SOUTHEAST_CORNER) continue;
+                else if (i == b->width + 1 && j == 0 && wc == WALL_NORTHEAST_CORNER) continue;
+                else if ((i == b->width + 1 || i == 0) && wc == WALL_VERTICAL) continue;
+                else if ((j == b->height + 1 || j == 0) && wc == WALL_HORIZONTAL) continue;
+                else if (i == b->width + 2 && wc == '\n') continue;
+                return 1;
+            }
+            switch (wc) {
+                case TILE_BLACK:
+                    b->tile_colors[j - 1][i - 1] = BLACK;
+                    break;
+                case TILE_WHITE:
+                    b->tile_colors[j - 1][i - 1] = WHITE;
+                    break;
+                case ANT_NORTH_BLACK:
+                    b->tile_colors[j - 1][i - 1] = BLACK;
+                    a->x = i - 1;
+                    a->y = j - 1;
+                    a->direction = NORTH;
+                    break;
+                case ANT_NORTH_WHITE:
+                    b->tile_colors[j - 1][i - 1] = WHITE;
+                    a->x = i - 1;
+                    a->y = j - 1;
+                    a->direction = NORTH;
+                    break;
+                case ANT_EAST_BLACK:
+                    b->tile_colors[j - 1][i - 1] = BLACK;
+                    a->x = i - 1;
+                    a->y = j - 1;
+                    a->direction = EAST;
+                    break;
+                case ANT_EAST_WHITE:
+                    b->tile_colors[j - 1][i - 1] = WHITE;
+                    a->x = i - 1;
+                    a->y = j - 1;
+                    a->direction = EAST;
+                    break;
+                case ANT_SOUTH_BLACK:
+                    b->tile_colors[j - 1][i - 1] = BLACK;
+                    a->x = i - 1;
+                    a->y = j - 1;
+                    a->direction = SOUTH;
+                    break;
+                case ANT_SOUTH_WHITE:
+                    b->tile_colors[j - 1][i - 1] = WHITE;
+                    a->x = i - 1;
+                    a->y = j - 1;
+                    a->direction = SOUTH;
+                    break;
+                case ANT_WEST_BLACK:
+                    b->tile_colors[j - 1][i - 1] = BLACK;
+                    a->x = i - 1;
+                    a->y = j - 1;
+                    a->direction = WEST;
+                    break;
+                case ANT_WEST_WHITE:
+                    b->tile_colors[j - 1][i - 1] = WHITE;
+                    a->x = i - 1;
+                    a->y = j - 1;
+                    a->direction = WEST;
+                    break;
+                default:
+                    return 1;
+            }
+        }
+    }
+    if(getwc(read_loc) != EOF) return 1;
     return 0;
 }

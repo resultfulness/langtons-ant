@@ -17,7 +17,6 @@ typedef struct {
     int x;
     int y;
     Direction direction : 2;
-    int iter_no;
 } Ant;
 
 typedef struct {

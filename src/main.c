@@ -32,7 +32,6 @@ int main(int argc, char** argv) {
         .x = config->row_cnt / 2,
         .y = config->col_cnt / 2,
         .direction = config->initial_dir,
-        .iter_no = 0
     };
     Board b = {
         .width = config->row_cnt,
@@ -42,11 +41,30 @@ int main(int argc, char** argv) {
     for(int i = 0; i < b.height; i++)
         tc[i] = calloc(sizeof(TileColor), b.width);
     b.tile_colors = tc;
+    if (config->input_file != NULL) {
+        FILE* in = fopen(config->input_file, "r");
+        if (in == NULL) {
+            fprintf(stderr,
+                    "%s: nie można otworzyć pliku wejściowego '%s'\n",
+                    argv[0],
+                    config->input_file);
+            /* todo: goto out_free_FOO */
+            return 1;
+        }
+        if(read_state(&a, &b, in)) {
+            fprintf(stderr,
+                    "%s: nieprawidłowy format pliku wejściowego '%s'\n",
+                    argv[0],
+                    config->input_file);
+            /* todo: goto out_free_FOO */
+            return 1;
+        }
+    }
 
-    for(int i = 0; i < config->iter_no; i++) {
+    for(int i = 1; i <= config->iter_no; i++) {
         iterate(&a, &b);
         if (out != stdout) {
-            char* path = get_outfilepath(config->output_prefix, a.iter_no);
+            char* path = get_outfilepath(config->output_prefix, i);
             if (path == NULL) {
                 fprintf(stderr, "%s: błąd alokacji\n", argv[0]);
                 /* todo: goto out_free_FOO */
@@ -62,9 +80,13 @@ int main(int argc, char** argv) {
                 return 1;
             }
         }
-        write_state(a, b, out);
-        if (out != stdout)
+        if(out == stdout) {
+            fprintf(out, "%d:\n", i);
+            write_state(a, b, out);
+        } else {
+            write_state(a, b, out);
             fclose(out);
+        }
     }
 
 out_free_config:
