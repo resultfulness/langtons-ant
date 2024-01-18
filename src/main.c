@@ -38,13 +38,13 @@ int main(int argc, char** argv) {
         out = stdout;
 
     Ant ant = {
-        .x = config->row_cnt / 2,
-        .y = config->col_cnt / 2,
+        .x = config->col_cnt / 2,
+        .y = config->row_cnt / 2,
         .direction = config->initial_dir
     };
     Board board = {
-        .width = config->row_cnt,
-        .height = config->col_cnt
+        .width = config->col_cnt,
+        .height = config->row_cnt
     };
 
     TileColor** tcs = malloc(sizeof(TileColor*) * board.height);
