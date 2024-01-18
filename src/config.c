@@ -5,7 +5,7 @@
 
 #include "config.h"
 
-int build_config(Config* config, int argc, char** argv) {
+enum config_errorcode build_config(Config* config, int argc, char** argv) {
     char c;
     char* endptr = NULL;
     int non_numeric_found = 0;
@@ -19,19 +19,19 @@ int build_config(Config* config, int argc, char** argv) {
                 config->row_cnt = strtol(optarg, &endptr, 10);
                 non_numeric_found = optarg && *endptr != 0;
                 if (non_numeric_found || config->row_cnt <= 0)
-                    return 3;
+                    return INCORRECT_ROW_VALUE;
                 break;
             case 'c':
                 config->col_cnt = strtol(optarg, &endptr, 10);
                 non_numeric_found = optarg && *endptr != 0;
                 if (non_numeric_found || config->col_cnt <= 0)
-                    return 4;
+                    return INCORRECT_COLUMN_VALUE;
                 break;
             case 'n':
                 config->iter_no = strtol(optarg, &endptr, 10);
                 non_numeric_found = optarg && *endptr != 0;
                 if (non_numeric_found || config->iter_no <= 0)
-                    return 5;
+                    return INCORRECT_ITERATION_VALUE;
                 break;
             case 'p':
                 config->output_prefix = optarg;
@@ -45,10 +45,8 @@ int build_config(Config* config, int argc, char** argv) {
                     config->initial_dir = SOUTH;
                 } else if (strcmp(optarg, "W") == 0) {
                     config->initial_dir = WEST;
-                } else if (strcmp(optarg, "") == 0) {
-                    return 16;
                 } else {
-                    return 6;
+                    return INCORRECT_DIRECTION_VALUE;
                 }
                 break;
             case 'l':
@@ -63,9 +61,11 @@ int build_config(Config* config, int argc, char** argv) {
                 if (non_numeric_found ||
                     config->rnd_fill_ratio < 0 ||
                     config->rnd_fill_ratio > 100)
-                    return 7;
+                    return INCORRECT_RANDOM_FILL_VALUE;
                 config->rnd_fill_ratio /= 100;
                 break;
+            case 'h':
+                return HELP_ARGUMENT_OUT_OF_CONTEXT;
             case '?':
                 switch (optopt) {
                     case 'r':
@@ -75,84 +75,91 @@ int build_config(Config* config, int argc, char** argv) {
                     case 'd':
                     case 'i':
                     case 'R':
-                        return 2;
+                        return MISSING_ARGUMENT_VALUE;
+                    case 'h':
+                        return HELP_ARGUMENT_OUT_OF_CONTEXT;
                     default:
-                        return 1;
+                        return UNKNOWN_ARGUMENT;
                 }
                 break;
             default:
-                return 1;
+                return UNKNOWN_ARGUMENT;
         }
     }
 
     if (config->row_cnt <= 0)
-        return 13;
+        return MISSING_ROW_ARGUMENT;
     if (config->col_cnt <= 0)
-        return 14;
+        return MISSING_COLUMN_ARGUMENT;
     if (config->iter_no <= 0)
-        return 15;
+        return MISSING_ITERATION_ARGUMENT;
 
-    return 0;
+    return NO_ERROR;
 }
 
-void print_config_error(char* scriptname, int errorcode) {
+void print_config_error(char* scriptname, enum config_errorcode errorcode) {
     switch (errorcode) {
-        case 1:
+        case NO_ERROR:
+            return;
+        case UNKNOWN_ARGUMENT:
             fprintf(stderr,
                     "%s: nieznany argument '-%c'\n",
                     scriptname,
                     optopt);
             break;
-        case 2:
+        case MISSING_ARGUMENT_VALUE:
             fprintf(stderr,
                     "%s: brak wartości dla argumentu '-%c'\n",
                     scriptname,
                     optopt);
             break;
-        case 3:
+        case INCORRECT_ROW_VALUE:
             fprintf(stderr,
                     "%s: nieprawidłowa wartość dla argumentu '-r'\n",
                     scriptname);
             break;
-        case 4:
+        case INCORRECT_COLUMN_VALUE:
             fprintf(stderr,
                     "%s: nieprawidłowa wartość dla argumentu '-c'\n",
                     scriptname);
             break;
-        case 5:
+        case INCORRECT_ITERATION_VALUE:
             fprintf(stderr,
                     "%s: nieprawidłowa wartość dla argumentu '-n'\n",
                     scriptname);
             break;
-        case 6:
+        case INCORRECT_DIRECTION_VALUE:
             fprintf(stderr,
                     "%s: nieprawidłowa wartość dla argumentu '-d'\n",
                     scriptname);
             break;
-        case 7:
+        case INCORRECT_RANDOM_FILL_VALUE:
             fprintf(stderr,
                     "%s: Nieprawidłowa wartość dla argumentu '-R'\n",
                     scriptname);
             break;
-        case 13:
+        case MISSING_ROW_ARGUMENT:
             fprintf(stderr,
                     "%s: brak wymaganego argumentu '-r'\n",
                     scriptname);
             break;
-        case 14:
+        case MISSING_COLUMN_ARGUMENT:
             fprintf(stderr,
                     "%s: brak wymaganego argumentu '-c'\n",
                     scriptname);
             break;
-        case 15:
+        case MISSING_ITERATION_ARGUMENT:
             fprintf(stderr,
                     "%s: brak wymaganego argumentu '-n'\n",
                     scriptname);
             break;
-        case 16:
+        case HELP_ARGUMENT_OUT_OF_CONTEXT:
             fprintf(stderr,
-                    "%s: brak wymaganego argumentu '-d'\n",
+                    "%s: argument '-h' nie jest dozwolony w tym kontekście\n",
                     scriptname);
             break;
+        default:
+            fprintf(stderr, "%s: nieznany błąd\n", scriptname);
     }
+    fprintf(stderr, "więcej informacji: '%s -h'\n", scriptname);
 }

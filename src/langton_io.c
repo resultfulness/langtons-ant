@@ -49,7 +49,6 @@ char* get_outfilepath(char* outfile_prefix, int outfile_no) {
 }
 
 int write_state(Ant a, Board b, FILE* write_loc) {
-    // setlocale(LC_ALL, "C.UTF-8");
     fprintf(write_loc, "%lc", WALL_NORTHWEST_CORNER);
     for (int i = 0; i < b.width; i++) {
         fprintf(write_loc, "%lc", WALL_HORIZONTAL);
@@ -77,11 +76,12 @@ int write_state(Ant a, Board b, FILE* write_loc) {
 }
 
 int read_state(Ant* a, Board* b, FILE* read_loc) {
-    setlocale(LC_ALL, "C.UTF-8");
     for(int j = 0; j < b->height + 2; j++) {
         for(int i = 0; i < b->width + 3; i++) {
             wchar_t wc = getwc(read_loc);
-            if(wc == EOF) return 1;
+            if(wc == WEOF) return 1;
+
+            /* pominięcie 'ściany' planszy */
             if(j == 0 || i == 0 || j > b->height || i > b->width) {
                 if (i == 0 && j == 0 && wc == WALL_NORTHWEST_CORNER) continue;
                 else if (i == 0 && j == b->height + 1 && wc == WALL_SOUTHWEST_CORNER) continue;
@@ -92,6 +92,7 @@ int read_state(Ant* a, Board* b, FILE* read_loc) {
                 else if (i == b->width + 2 && wc == '\n') continue;
                 return 1;
             }
+
             switch (wc) {
                 case TILE_BLACK:
                     b->tile_colors[j - 1][i - 1] = BLACK;
@@ -152,6 +153,6 @@ int read_state(Ant* a, Board* b, FILE* read_loc) {
             }
         }
     }
-    if(getwc(read_loc) != EOF) return 1;
+    if(getwc(read_loc) != WEOF) return 1;
     return 0;
 }
